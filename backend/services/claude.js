@@ -49,7 +49,8 @@ async function askClaude(client, knowledgeItems, history, userMessage) {
     }
 
     return parsed;
-  } catch {
+  } catch (err) {
+    console.error('[askClaude error]', err?.message || err);
     return {
       reply: '很抱歉，系統暫時無法回答，請稍後再試或聯繫客服。',
       needsHuman: true
