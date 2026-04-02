@@ -32,7 +32,6 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/', require('./routes/admin'));
 
-app.use(express.static(path.join(__dirname, '../frontend')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 initDb();
