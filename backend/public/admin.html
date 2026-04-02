@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能客服後台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  /* Top Nav */
+  nav { background: #1e293b; border-bottom: 1px solid #334155; padding: 0 24px; display: flex; align-items: center; gap: 32px; height: 56px; }
+  nav .logo { font-size: 16px; font-weight: 600; color: #f8fafc; margin-right: 16px; }
+  nav a { color: #94a3b8; text-decoration: none; font-size: 14px; padding: 8px 0; border-bottom: 2px solid transparent; transition: all 0.2s; cursor: pointer; }
+  nav a.active, nav a:hover { color: #f8fafc; border-bottom-color: #3b82f6; }
+  nav .logout { margin-left: auto; color: #64748b; font-size: 13px; }
+  nav .logout:hover { color: #f87171; }
+
+  /* Layout */
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Stat Cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card .label { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .card .value { font-size: 28px; font-weight: 700; color: #f8fafc; }
+  .card .sub { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+  /* Charts */
+  .charts { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .chart-box h3 { font-size: 14px; color: #94a3b8; margin-bottom: 16px; }
+
+  /* Top Questions */
+  .top-questions { list-style: none; }
+  .top-questions li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; color: #cbd5e1; }
+  .top-questions li:last-child { border-bottom: none; }
+  .top-questions li .count { background: #334155; color: #94a3b8; font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+
+  /* Logs Tab */
+  .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filters input[type="date"], .filters select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .filters button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .filters button:hover { background: #2563eb; }
+
+  table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+  thead { background: #0f172a; }
+  th { text-align: left; padding: 12px 16px; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+  td { padding: 12px 16px; font-size: 13px; border-top: 1px solid #1e293b; vertical-align: top; }
+  tr:hover td { background: #1a2537; }
+  td.message { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #cbd5e1; }
+  td.reply { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #94a3b8; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+  .badge.ai { background: #1d4ed8; color: #93c5fd; }
+  .badge.human { background: #7f1d1d; color: #fca5a5; }
+  td.ts { color: #475569; font-size: 12px; white-space: nowrap; }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .pagination span { font-size: 13px; color: #64748b; }
+  .page-btns { display: flex; gap: 8px; }
+  .page-btns button { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .page-btns button:hover:not(:disabled) { background: #334155; }
+  .page-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .empty { text-align: center; color: #475569; padding: 40px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">📊 智能客服後台</span>
+  <a id="tab-overview" class="active" onclick="switchTab('overview')">總覽</a>
+  <a id="tab-logs" onclick="switchTab('logs')">對話紀錄</a>
+  <a class="logout" href="/admin/logout">登出</a>
+</nav>
+
+<main>
+  <!-- Overview Tab -->
+  <div id="overview" class="tab-content active">
+    <div class="cards">
+      <div class="card">
+        <div class="label">總對話數</div>
+        <div class="value" id="stat-total">—</div>
+      </div>
+      <div class="card">
+        <div class="label">AI 自動解決</div>
+        <div class="value" id="stat-ai">—</div>
+        <div class="sub" id="stat-rate">解決率 —%</div>
+      </div>
+      <div class="card">
+        <div class="label">轉人工處理</div>
+        <div class="value" id="stat-human">—</div>
+      </div>
+      <div class="card">
+        <div class="label">今日對話</div>
+        <div class="value" id="stat-today">—</div>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="chart-box">
+        <h3>近 14 天對話趨勢</h3>
+        <canvas id="chart-daily" height="220"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>熱門問題 Top 5</h3>
+        <ul class="top-questions" id="top-questions"><li class="empty">載入中…</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Tab -->
+  <div id="logs" class="tab-content">
+    <div class="filters">
+      <input type="date" id="filter-date" />
+      <select id="filter-type">
+        <option value="all">全部</option>
+        <option value="ai">AI 解決</option>
+        <option value="human">轉人工</option>
+      </select>
+      <button onclick="loadLogs(1)">篩選</button>
+      <button onclick="clearFilters()">清除</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>用戶訊息</th>
+          <th>AI 回覆</th>
+          <th>狀態</th>
+        </tr>
+      </thead>
+      <tbody id="logs-body"></tbody>
+    </table>
+
+    <div class="pagination">
+      <span id="page-info">—</span>
+      <div class="page-btns">
+        <button id="btn-prev" onclick="changePage(-1)" disabled>上一頁</button>
+        <button id="btn-next" onclick="changePage(1)" disabled>下一頁</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+let dailyChart = null;
+
+/* Tab switching */
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav a[id^="tab-"]').forEach(el => el.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'logs') loadLogs(1);
+}
+
+/* Overview: load stats */
+async function loadStats() {
+  try {
+    const res = await fetch('/api/admin/stats');
+    const d = await res.json();
+    document.getElementById('stat-total').textContent = d.total ?? 0;
+    document.getElementById('stat-ai').textContent = d.aiResolved ?? 0;
+    document.getElementById('stat-human').textContent = d.needsHuman ?? 0;
+    document.getElementById('stat-today').textContent = d.todayCount ?? 0;
+    document.getElementById('stat-rate').textContent = '解決率 ' + (d.resolutionRate ?? 0) + '%';
+    renderDailyChart(d.dailyCounts || []);
+    renderTopQuestions(d.topQuestions || []);
+  } catch (e) {
+    console.error('Stats load error', e);
+  }
+}
+
+function renderDailyChart(dailyCounts) {
+  const labels = dailyCounts.map(r => r.date);
+  const data = dailyCounts.map(r => r.count);
+  const ctx = document.getElementById('chart-daily').getContext('2d');
+  if (dailyChart) dailyChart.destroy();
+  dailyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '對話數',
+        data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#64748b', font: { size: 11 }, stepSize: 1 }, grid: { color: '#334155' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderTopQuestions(questions) {
+  const ul = document.getElementById('top-questions');
+  if (!questions.length) { ul.innerHTML = '<li class="empty">尚無資料</li>'; return; }
+  ul.innerHTML = questions.map(q =>
+    `<li><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(q.message)}</span><span class="count">${q.count}</span></li>`
+  ).join('');
+}
+
+/* Logs */
+async function loadLogs(page) {
+  currentPage = page;
+  const date = document.getElementById('filter-date').value;
+  const filter = document.getElementById('filter-type').value;
+  const params = new URLSearchParams({ page, limit: 20, filter });
+  if (date) params.set('date', date);
+
+  try {
+    const res = await fetch('/api/admin/logs?' + params);
+    const d = await res.json();
+    totalPages = Math.ceil((d.total || 0) / 20) || 1;
+    renderLogs(d.data || [], d.total || 0);
+  } catch (e) {
+    console.error('Logs load error', e);
+  }
+}
+
+function renderLogs(rows, total) {
+  const tbody = document.getElementById('logs-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">無符合資料</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td class="ts">${formatTs(r.created_at)}</td>
+        <td class="message" title="${escHtml(r.message)}">${escHtml(r.message)}</td>
+        <td class="reply" title="${escHtml(r.reply)}">${escHtml(r.reply)}</td>
+        <td>${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}</td>
+      </tr>`).join('');
+  }
+  const start = (currentPage - 1) * 20 + 1;
+  const end = Math.min(currentPage * 20, total);
+  document.getElementById('page-info').textContent = total ? `第 ${start}–${end} 筆，共 ${total} 筆` : '無資料';
+  document.getElementById('btn-prev').disabled = currentPage <= 1;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages;
+}
+
+function changePage(delta) {
+  const next = currentPage + delta;
+  if (next >= 1 && next <= totalPages) loadLogs(next);
+}
+
+function clearFilters() {
+  document.getElementById('filter-date').value = '';
+  document.getElementById('filter-type').value = 'all';
+  loadLogs(1);
+}
+
+/* Helpers */
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTs(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* Init */
+loadStats();
+</script>
+</body>
+</html>
