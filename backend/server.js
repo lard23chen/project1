@@ -7,6 +7,7 @@ const path = require('path');
 const { initDb } = require('./services/db');
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(cors({
   origin: process.env.ALLOWED_ORIGIN || '*'
@@ -19,7 +20,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 }
+  cookie: { maxAge: 8 * 60 * 60 * 1000, secure: 'auto', sameSite: 'lax' }
 }));
 
 app.use('/api/', rateLimit({
