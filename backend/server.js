@@ -35,7 +35,7 @@ app.use('/', require('./routes/admin'));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-initDb();
+initDb().catch(err => { console.error('DB init failed:', err.message); process.exit(1); });
 
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {

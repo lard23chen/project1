@@ -66,14 +66,14 @@ router.get('/admin', requireAuth, (req, res) => {
 });
 
 // 統計 API
-router.get('/api/admin/stats', requireAuth, (req, res) => {
-  res.json(getStats());
+router.get('/api/admin/stats', requireAuth, async (req, res) => {
+  res.json(await getStats());
 });
 
 // 對話紀錄 API
-router.get('/api/admin/logs', requireAuth, (req, res) => {
+router.get('/api/admin/logs', requireAuth, async (req, res) => {
   const { date, filter, page, limit } = req.query;
-  res.json(getLogs({
+  res.json(await getLogs({
     date: date || null,
     filter: filter || 'all',
     page: parseInt(page) || 1,
