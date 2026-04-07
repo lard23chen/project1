@@ -4,7 +4,8 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const path = require('path');
-const { initDb } = require('./services/db');
+const { initDb, seedKnowledge } = require('./services/db');
+const { loadKnowledgeFromFiles } = require('./services/rag');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -35,7 +36,12 @@ app.use('/', require('./routes/admin'));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-initDb().catch(err => { console.error('DB init failed:', err.message); process.exit(1); });
+initDb()
+  .then(() => {
+    const items = loadKnowledgeFromFiles(path.join(__dirname, 'knowledge'));
+    return seedKnowledge(items);
+  })
+  .catch(err => { console.error('DB init failed:', err.message); process.exit(1); });
 
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {

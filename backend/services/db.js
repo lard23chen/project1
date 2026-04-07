@@ -1,6 +1,15 @@
 const mongoose = require('mongoose');
 
 // ── Schemas ──────────────────────────────────────────────
+const knowledgeSchema = new mongoose.Schema({
+  id:       { type: String, required: true, unique: true },
+  tags:     [String],
+  question: { type: String, required: true },
+  answer:   { type: String, required: true }
+});
+
+const KnowledgeItem = mongoose.model('KnowledgeItem', knowledgeSchema);
+
 const conversationSchema = new mongoose.Schema({
   user_message: { type: String, required: true },
   ai_reply:     { type: String, required: true },
@@ -92,4 +101,24 @@ async function closeDb() {
   await mongoose.disconnect();
 }
 
-module.exports = { initDb, saveConversation, saveContact, getStats, getLogs, closeDb };
+// ── Knowledge ─────────────────────────────────────────────
+async function seedKnowledge(items) {
+  const count = await KnowledgeItem.countDocuments();
+  if (count === 0 && items.length > 0) {
+    await KnowledgeItem.insertMany(items);
+    console.log(`[db] seeded ${items.length} knowledge items`);
+  }
+}
+
+async function getAllKnowledge() {
+  return KnowledgeItem.find({}).lean();
+}
+
+async function addKnowledge({ id, tags, question, answer }) {
+  const last = await KnowledgeItem.findOne().sort({ id: -1 }).lean();
+  const lastNum = parseInt((last?.id || 'QA-000').replace('QA-', '')) || 0;
+  const newId = id || `QA-${String(lastNum + 1).padStart(3, '0')}`;
+  return KnowledgeItem.create({ id: newId, tags, question, answer });
+}
+
+module.exports = { initDb, saveConversation, saveContact, getStats, getLogs, closeDb, seedKnowledge, getAllKnowledge, addKnowledge };

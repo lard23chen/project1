@@ -1,8 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-function loadKnowledge(dataDir) {
-  console.log(`[rag] dataDir=${dataDir}`);
+function loadKnowledgeFromFiles(dataDir) {
   let files;
   try {
     files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
@@ -10,7 +9,6 @@ function loadKnowledge(dataDir) {
     console.error(`[rag] readdirSync failed: ${e.message}`);
     return [];
   }
-  console.log(`[rag] files=${JSON.stringify(files)}`);
   const items = [];
   for (const file of files) {
     try {
@@ -20,7 +18,6 @@ function loadKnowledge(dataDir) {
       console.error(`[rag] failed to load ${file}: ${e.message}`);
     }
   }
-  console.log(`[rag] total items=${items.length}`);
   return items;
 }
 
@@ -61,4 +58,4 @@ function search(knowledge, query, topN = 5) {
   return scored;
 }
 
-module.exports = { loadKnowledge, search };
+module.exports = { loadKnowledgeFromFiles, search };
