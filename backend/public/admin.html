@@ -71,6 +71,7 @@
   /* Knowledge modal */
   .add-kb-btn { background: #065f46; color: #6ee7b7; border: none; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
   .add-kb-btn:hover { background: #047857; }
+  .fixed-badge { background: #1e3a5f; color: #60a5fa; border-radius: 4px; padding: 3px 8px; font-size: 11px; white-space: nowrap; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; }
   .modal-overlay.hidden { display: none; }
   .modal { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; width: 520px; max-width: 95vw; display: flex; flex-direction: column; gap: 12px; }
@@ -191,6 +192,7 @@
 let currentPage = 1;
 let totalPages = 1;
 let dailyChart = null;
+let knowledgeQuestions = new Set();
 
 /* Tab switching */
 function switchTab(name) {
@@ -265,8 +267,13 @@ async function loadLogs(page) {
   if (date) params.set('date', date);
 
   try {
-    const res = await fetch('/api/admin/logs?' + params);
-    const d = await res.json();
+    const [logsRes, kbRes] = await Promise.all([
+      fetch('/api/admin/logs?' + params),
+      fetch('/api/admin/knowledge')
+    ]);
+    const d = await logsRes.json();
+    const kb = await kbRes.json();
+    knowledgeQuestions = new Set(kb.map(i => i.question.trim()));
     totalPages = Math.ceil((d.total || 0) / 20) || 1;
     renderLogs(d.data || [], d.total || 0);
   } catch (e) {
@@ -286,7 +293,11 @@ function renderLogs(rows, total) {
         <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
         <td>
           ${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}
-          ${(r.needs_human || r.ai_reply.includes('很抱歉')) ? `<button class="add-kb-btn" data-question="${escHtml(r.user_message)}">＋知識庫</button>` : ''}
+          ${(r.needs_human || r.ai_reply.includes('很抱歉'))
+            ? knowledgeQuestions.has(r.user_message.trim())
+              ? `<span class="fixed-badge">已修正</span>`
+              : `<button class="add-kb-btn" data-question="${escHtml(r.user_message)}">＋知識庫</button>`
+            : ''}
         </td>
       </tr>`).join('');
   }
@@ -352,7 +363,9 @@ async function saveKnowledge() {
   const data = await res.json();
   if (data.success) {
     alert(`已新增至知識庫（${data.id}）`);
+    knowledgeQuestions.add(question);
     closeKbModal();
+    loadLogs(currentPage);
   } else {
     alert('儲存失敗：' + (data.error || '未知錯誤'));
   }

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
-const { getStats, getLogs, addKnowledge } = require('../services/db');
+const { getStats, getLogs, addKnowledge, getAllKnowledge } = require('../services/db');
 
 // 登入頁
 router.get('/admin/login', (req, res) => {
@@ -79,6 +79,12 @@ router.get('/api/admin/logs', requireAuth, async (req, res) => {
     page: parseInt(page) || 1,
     limit: parseInt(limit) || 20
   }));
+});
+
+// 取得知識庫所有問題（前台比對用）
+router.get('/api/admin/knowledge', requireAuth, async (req, res) => {
+  const items = await getAllKnowledge();
+  res.json(items.map(i => ({ id: i.id, question: i.question })));
 });
 
 // 新增知識庫 API
