@@ -6,7 +6,7 @@ const { askClaude } = require('../services/claude');
 const { saveConversation } = require('../services/db');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const knowledge = loadKnowledge(path.join(__dirname, '../data'));
+const knowledge = loadKnowledge(path.join(__dirname, '../knowledge'));
 const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 router.post('/', async (req, res) => {
