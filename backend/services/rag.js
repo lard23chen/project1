@@ -2,12 +2,25 @@ const fs = require('fs');
 const path = require('path');
 
 function loadKnowledge(dataDir) {
-  const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
+  console.log(`[rag] dataDir=${dataDir}`);
+  let files;
+  try {
+    files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
+  } catch (e) {
+    console.error(`[rag] readdirSync failed: ${e.message}`);
+    return [];
+  }
+  console.log(`[rag] files=${JSON.stringify(files)}`);
   const items = [];
   for (const file of files) {
-    const content = JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf-8'));
-    items.push(...content);
+    try {
+      const content = JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf-8'));
+      items.push(...content);
+    } catch (e) {
+      console.error(`[rag] failed to load ${file}: ${e.message}`);
+    }
   }
+  console.log(`[rag] total items=${items.length}`);
   return items;
 }
 
