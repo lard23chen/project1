@@ -74,7 +74,7 @@
   .fixed-badge { background: #1e3a5f; color: #60a5fa; border-radius: 4px; padding: 3px 8px; font-size: 11px; white-space: nowrap; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; }
   .modal-overlay.hidden { display: none; }
-  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; width: 520px; max-width: 95vw; display: flex; flex-direction: column; gap: 12px; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .modal h2 { font-size: 16px; color: #f8fafc; margin: 0; }
   .modal label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
   .modal input, .modal textarea { width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 13px; box-sizing: border-box; }
@@ -182,8 +182,8 @@
       <textarea id="kb-answer" placeholder="請輸入標準答案內容..."></textarea>
     </div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeKbModal()">取消</button>
-      <button class="btn-save" onclick="saveKnowledge()">儲存</button>
+      <button class="btn-cancel" id="kb-cancel-btn">取消</button>
+      <button class="btn-save" id="kb-save-btn">儲存</button>
     </div>
   </div>
 </div>
@@ -336,6 +336,10 @@ document.getElementById('logs-body').addEventListener('click', e => {
   const btn = e.target.closest('.add-kb-btn');
   if (btn) openKbModal(btn.dataset.question || '');
 });
+
+/* Modal 按鈕 */
+document.getElementById('kb-cancel-btn').addEventListener('click', closeKbModal);
+document.getElementById('kb-save-btn').addEventListener('click', saveKnowledge);
 
 /* Knowledge Modal */
 function openKbModal(question) {
