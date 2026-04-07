@@ -21,7 +21,9 @@ router.post('/', async (req, res) => {
   }
 
   const relevant = search(knowledge, message);
+  console.log(`[chat] knowledge=${knowledge.length} relevant=${relevant.length} query="${message}"`);
   const result = await askClaude(client, relevant, history, message);
+  console.log(`[chat] needsHuman=${result.needsHuman} reply="${result.reply.slice(0,50)}"`);
 
   await saveConversation(message, result.reply, result.needsHuman ? 1 : 0);
 
