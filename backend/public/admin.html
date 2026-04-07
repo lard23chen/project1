@@ -286,7 +286,7 @@ function renderLogs(rows, total) {
         <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
         <td>
           ${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}
-          ${r.needs_human ? `<button class="add-kb-btn" data-question="${escHtml(r.user_message)}">＋知識庫</button>` : ''}
+          ${(r.needs_human || r.ai_reply.includes('很抱歉')) ? `<button class="add-kb-btn" data-question="${escHtml(r.user_message)}">＋知識庫</button>` : ''}
         </td>
       </tr>`).join('');
   }
