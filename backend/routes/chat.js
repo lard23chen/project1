@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { search } = require('../services/rag');
 const { askClaude } = require('../services/claude');
-const { saveConversation, getAllKnowledge } = require('../services/db');
+const { saveConversation, rateConversation, getAllKnowledge } = require('../services/db');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
@@ -22,9 +22,16 @@ router.post('/', async (req, res) => {
   const relevant = search(knowledge, message);
   const result = await askClaude(client, relevant, history, message);
 
-  await saveConversation(message, result.reply, result.needsHuman ? 1 : 0);
+  const convId = await saveConversation(message, result.reply, result.needsHuman ? 1 : 0);
 
-  res.json(result);
+  res.json({ ...result, id: convId });
+});
+
+router.post('/rate', async (req, res) => {
+  const { id, rating } = req.body;
+  if (!id || ![1, -1].includes(rating)) return res.status(400).json({ error: '參數錯誤' });
+  await rateConversation(id, rating);
+  res.json({ success: true });
 });
 
 module.exports = router;

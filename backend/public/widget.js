@@ -80,23 +80,33 @@
       gap: 4px;
       max-width: 80%;
     }
-    .copy-btn {
-      align-self: flex-end;
+    .bubble-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .assistant-wrap:hover .bubble-actions { opacity: 1; }
+    .copy-btn, .rate-btn {
       background: none;
       border: none;
       cursor: pointer;
-      padding: 2px 4px;
+      padding: 2px 5px;
       color: #9ca3af;
       font-size: 12px;
       display: flex;
       align-items: center;
       gap: 3px;
-      opacity: 0;
-      transition: opacity 0.15s;
+      border-radius: 4px;
+      transition: background 0.1s, color 0.1s;
     }
-    .assistant-wrap:hover .copy-btn { opacity: 1; }
     .copy-btn:hover { color: #2563eb; }
     .copy-btn.copied { color: #16a34a; opacity: 1; }
+    .rate-btn:hover { background: #e5e7eb; }
+    .rate-btn.up.active { color: #16a34a; }
+    .rate-btn.down.active { color: #ef4444; }
+    .rate-divider { color: #d1d5db; font-size: 10px; }
     .typing { color: #9ca3af; font-style: italic; }
     .contact-hint {
       margin: 0 12px 8px;
@@ -248,7 +258,7 @@
       }
     }
 
-    addMessage(role, text) {
+    addMessage(role, text, convId = null) {
       const messages = this.shadow.getElementById('messages');
       if (role === 'assistant') {
         const wrap = document.createElement('div');
@@ -256,6 +266,11 @@
         const bubble = document.createElement('div');
         bubble.className = 'bubble assistant';
         bubble.textContent = text;
+
+        const actions = document.createElement('div');
+        actions.className = 'bubble-actions';
+
+        // 複製按鈕
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
         copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 複製`;
@@ -269,8 +284,47 @@
             }, 2000);
           });
         });
+
+        actions.appendChild(copyBtn);
+
+        // 評分按鈕（只在有 convId 時加）
+        if (convId) {
+          const divider = document.createElement('span');
+          divider.className = 'rate-divider';
+          divider.textContent = '|';
+
+          const upBtn = document.createElement('button');
+          upBtn.className = 'rate-btn up';
+          upBtn.title = '有幫助';
+          upBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+
+          const downBtn = document.createElement('button');
+          downBtn.className = 'rate-btn down';
+          downBtn.title = '沒有幫助';
+          downBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
+
+          const sendRating = async (rating, activeBtn, otherBtn) => {
+            try {
+              await fetch(`${API_BASE}/api/chat/rate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: convId, rating })
+              });
+              activeBtn.classList.add('active');
+              otherBtn.classList.remove('active');
+            } catch {}
+          };
+
+          upBtn.addEventListener('click', () => sendRating(1, upBtn, downBtn));
+          downBtn.addEventListener('click', () => sendRating(-1, downBtn, upBtn));
+
+          actions.appendChild(divider);
+          actions.appendChild(upBtn);
+          actions.appendChild(downBtn);
+        }
+
         wrap.appendChild(bubble);
-        wrap.appendChild(copyBtn);
+        wrap.appendChild(actions);
         messages.appendChild(wrap);
       } else {
         const bubble = document.createElement('div');
@@ -318,7 +372,7 @@
 
         this.history.push({ role: 'user', content: text });
         this.history.push({ role: 'assistant', content: data.reply });
-        this.addMessage('assistant', data.reply);
+        this.addMessage('assistant', data.reply, data.id);
 
         if (data.needsHuman) {
           this.showContactHint();

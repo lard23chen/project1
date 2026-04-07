@@ -14,6 +14,7 @@ const conversationSchema = new mongoose.Schema({
   user_message: { type: String, required: true },
   ai_reply:     { type: String, required: true },
   needs_human:  { type: Boolean, default: false },
+  rating:       { type: Number, default: null },
   created_at:   { type: Date, default: Date.now }
 });
 
@@ -37,7 +38,12 @@ async function initDb() {
 
 // ── Writes ────────────────────────────────────────────────
 async function saveConversation(userMessage, aiReply, needsHuman) {
-  await Conversation.create({ user_message: userMessage, ai_reply: aiReply, needs_human: !!needsHuman });
+  const doc = await Conversation.create({ user_message: userMessage, ai_reply: aiReply, needs_human: !!needsHuman });
+  return doc._id.toString();
+}
+
+async function rateConversation(id, rating) {
+  await Conversation.findByIdAndUpdate(id, { rating });
 }
 
 async function saveContact(name, email, message) {
@@ -121,4 +127,4 @@ async function addKnowledge({ id, tags, question, answer }) {
   return KnowledgeItem.create({ id: newId, tags, question, answer });
 }
 
-module.exports = { initDb, saveConversation, saveContact, getStats, getLogs, closeDb, seedKnowledge, getAllKnowledge, addKnowledge };
+module.exports = { initDb, saveConversation, rateConversation, saveContact, getStats, getLogs, closeDb, seedKnowledge, getAllKnowledge, addKnowledge };
