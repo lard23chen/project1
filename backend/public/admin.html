@@ -286,7 +286,7 @@ function renderLogs(rows, total) {
         <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
         <td>
           ${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}
-          ${r.needs_human ? `<button class="add-kb-btn" onclick="openKbModal(${JSON.stringify(r.user_message)})">＋知識庫</button>` : ''}
+          ${r.needs_human ? `<button class="add-kb-btn" data-question="${escHtml(r.user_message)}">＋知識庫</button>` : ''}
         </td>
       </tr>`).join('');
   }
@@ -319,6 +319,12 @@ function formatTs(ts) {
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/* 事件委派：監聽 tbody 的 +知識庫 按鈕 */
+document.getElementById('logs-body').addEventListener('click', e => {
+  const btn = e.target.closest('.add-kb-btn');
+  if (btn) openKbModal(btn.dataset.question || '');
+});
 
 /* Knowledge Modal */
 function openKbModal(question) {
