@@ -98,6 +98,29 @@
     .copy-btn:hover { color: #2563eb; }
     .copy-btn.copied { color: #16a34a; opacity: 1; }
     .typing { color: #9ca3af; font-style: italic; }
+    .contact-hint {
+      margin: 0 12px 8px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .contact-hint span { font-size: 12px; color: #1e40af; flex: 1; }
+    .contact-hint button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .contact-hint button:hover { background: #1d4ed8; }
     #contact-form {
       padding: 12px;
       display: flex;
@@ -298,7 +321,7 @@
         this.addMessage('assistant', data.reply);
 
         if (data.needsHuman) {
-          this.showContactForm();
+          this.showContactHint();
         }
       } catch {
         this.removeTyping();
@@ -307,6 +330,21 @@
         sendBtn.disabled = false;
         input.focus();
       }
+    }
+
+    showContactHint() {
+      const messages = this.shadow.getElementById('messages');
+      // 避免重複出現
+      if (this.shadow.querySelector('.contact-hint')) return;
+      const hint = document.createElement('div');
+      hint.className = 'contact-hint';
+      hint.innerHTML = `<span>需要人工客服協助嗎？</span><button id="open-contact-btn">聯絡客服</button>`;
+      hint.querySelector('#open-contact-btn').addEventListener('click', () => {
+        hint.remove();
+        this.showContactForm();
+      });
+      messages.appendChild(hint);
+      messages.scrollTop = messages.scrollHeight;
     }
 
     showContactForm() {
