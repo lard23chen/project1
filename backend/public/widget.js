@@ -73,6 +73,30 @@
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
+    .assistant-wrap {
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 80%;
+    }
+    .copy-btn {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      color: #9ca3af;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .assistant-wrap:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: #2563eb; }
+    .copy-btn.copied { color: #16a34a; opacity: 1; }
     .typing { color: #9ca3af; font-style: italic; }
     #contact-form {
       padding: 12px;
@@ -203,12 +227,35 @@
 
     addMessage(role, text) {
       const messages = this.shadow.getElementById('messages');
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${role}`;
-      bubble.textContent = text;
-      messages.appendChild(bubble);
+      if (role === 'assistant') {
+        const wrap = document.createElement('div');
+        wrap.className = 'assistant-wrap';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble assistant';
+        bubble.textContent = text;
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 複製`;
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 已複製`;
+            setTimeout(() => {
+              copyBtn.classList.remove('copied');
+              copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 複製`;
+            }, 2000);
+          });
+        });
+        wrap.appendChild(bubble);
+        wrap.appendChild(copyBtn);
+        messages.appendChild(wrap);
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${role}`;
+        bubble.textContent = text;
+        messages.appendChild(bubble);
+      }
       messages.scrollTop = messages.scrollHeight;
-      return bubble;
     }
 
     addTyping() {
