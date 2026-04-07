@@ -213,7 +213,7 @@ function renderTopQuestions(questions) {
   const ul = document.getElementById('top-questions');
   if (!questions.length) { ul.innerHTML = '<li class="empty">尚無資料</li>'; return; }
   ul.innerHTML = questions.map(q =>
-    `<li><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(q.message)}</span><span class="count">${q.count}</span></li>`
+    `<li><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(q.question)}</span><span class="count">${q.count}</span></li>`
   ).join('');
 }
 
@@ -243,8 +243,8 @@ function renderLogs(rows, total) {
     tbody.innerHTML = rows.map(r => `
       <tr>
         <td class="ts">${formatTs(r.created_at)}</td>
-        <td class="message" title="${escHtml(r.message)}">${escHtml(r.message)}</td>
-        <td class="reply" title="${escHtml(r.reply)}">${escHtml(r.reply)}</td>
+        <td class="message" title="${escHtml(r.user_message)}">${escHtml(r.user_message)}</td>
+        <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
         <td>${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}</td>
       </tr>`).join('');
   }
