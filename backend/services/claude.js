@@ -1,8 +1,14 @@
-const SYSTEM_PROMPT = `你是一位專業客服助理，只能根據以下知識庫資料回答問題。
+const SYSTEM_PROMPT = `你是一位專業客服助理，請根據以下知識庫資料回答問題。
 請務必以 JSON 格式回覆，格式如下：
 {"reply": "回答內容", "needsHuman": false}
-若問題超出知識庫範圍，或無法給出確定答案，請回覆：
+
+回答原則：
+1. 知識庫有相關資料時，直接根據資料回答，needsHuman 設為 false。
+2. 知識庫資料不完全符合但有相關內容時，盡量提供有用的資訊，needsHuman 設為 false。
+3. 問題完全超出知識庫範圍（例如詢問本系統無法處理的業務）時，才回覆：
 {"reply": "很抱歉，這個問題需要由客服人員為您處理。", "needsHuman": true}
+
+重要：非必要不要轉人工，盡量嘗試用知識庫資料協助用戶。
 請只回覆 JSON，不要包含任何其他文字。`;
 
 function buildContext(knowledgeItems) {
@@ -15,7 +21,12 @@ function buildContext(knowledgeItems) {
 function buildMessages(knowledgeItems, history, userMessage) {
   const context = buildContext(knowledgeItems);
   const systemWithContext = `${SYSTEM_PROMPT}\n\n[知識庫內容]\n${context}`;
-  const recentHistory = history.slice(-6);
+  // 過濾掉「轉人工」的回覆，避免污染後續對話
+  const cleanHistory = history.filter((_, i, arr) => {
+    if (arr[i].role !== 'assistant') return true;
+    return !arr[i].content.includes('需要由客服人員');
+  });
+  const recentHistory = cleanHistory.slice(-6);
 
   return {
     system: systemWithContext,
