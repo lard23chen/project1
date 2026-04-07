@@ -3,6 +3,7 @@ const path = require('path');
 const router = express.Router();
 const { loadKnowledge, search } = require('../services/rag');
 const { askClaude } = require('../services/claude');
+const { saveConversation } = require('../services/db');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const knowledge = loadKnowledge(path.join(__dirname, '../data'));
@@ -21,6 +22,8 @@ router.post('/', async (req, res) => {
 
   const relevant = search(knowledge, message);
   const result = await askClaude(client, relevant, history, message);
+
+  await saveConversation(message, result.reply, result.needsHuman ? 1 : 0);
 
   res.json(result);
 });

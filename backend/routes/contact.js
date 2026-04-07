@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { saveContact } = require('../services/db');
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -17,10 +18,7 @@ router.post('/', async (req, res) => {
   }
 
   const payload = {
-    name,
-    email,
-    message,
-    chatHistory,
+    name, email, message, chatHistory,
     timestamp: new Date().toISOString()
   };
 
@@ -36,6 +34,8 @@ router.post('/', async (req, res) => {
       console.error('Webhook 發送失敗:', err.message);
     }
   }
+
+  await saveContact(name, email, message);
 
   res.json({ success: true, message: '已收到您的留言，我們將盡快與您聯繫' });
 });
