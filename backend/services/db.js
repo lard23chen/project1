@@ -52,11 +52,13 @@ async function saveContact(name, email, message) {
 
 // ── Reads ─────────────────────────────────────────────────
 async function getStats() {
-  const [total, aiResolved, needsHuman, todayCount, dailyCounts, topQuestions] = await Promise.all([
+  const [total, aiResolved, needsHuman, todayCount, ratedUp, ratedDown, dailyCounts, topQuestions] = await Promise.all([
     Conversation.countDocuments(),
     Conversation.countDocuments({ needs_human: false }),
     Conversation.countDocuments({ needs_human: true }),
     Conversation.countDocuments({ created_at: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
+    Conversation.countDocuments({ rating: 1 }),
+    Conversation.countDocuments({ rating: -1 }),
     Conversation.aggregate([
       { $match: { created_at: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
       { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } }, count: { $sum: 1 } } },
@@ -72,7 +74,9 @@ async function getStats() {
   ]);
 
   const resolutionRate = total === 0 ? 0 : Math.round((aiResolved / total) * 100);
-  return { total, aiResolved, needsHuman, todayCount, resolutionRate, dailyCounts, topQuestions };
+  const totalRated = ratedUp + ratedDown;
+  const goodRate = totalRated === 0 ? null : Math.round((ratedUp / totalRated) * 100);
+  return { total, aiResolved, needsHuman, todayCount, resolutionRate, ratedUp, ratedDown, goodRate, dailyCounts, topQuestions };
 }
 
 async function getLogs({ date, filter, page = 1, limit = 20 } = {}) {
@@ -97,6 +101,7 @@ async function getLogs({ date, filter, page = 1, limit = 20 } = {}) {
     user_message: r.user_message,
     ai_reply:     r.ai_reply,
     needs_human:  r.needs_human ? 1 : 0,
+    rating:       r.rating ?? null,
     created_at:   r.created_at.toISOString()
   }));
 

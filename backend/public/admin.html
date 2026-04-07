@@ -116,6 +116,11 @@
         <div class="label">今日對話</div>
         <div class="value" id="stat-today">—</div>
       </div>
+      <div class="card">
+        <div class="label">用戶好評率</div>
+        <div class="value" id="stat-good-rate">—</div>
+        <div class="sub" id="stat-rated">已評分 — 則</div>
+      </div>
     </div>
 
     <div class="charts">
@@ -149,6 +154,7 @@
           <th>時間</th>
           <th>用戶訊息</th>
           <th>AI 回覆</th>
+          <th>評分</th>
           <th>狀態</th>
         </tr>
       </thead>
@@ -213,6 +219,8 @@ async function loadStats() {
     document.getElementById('stat-human').textContent = d.needsHuman ?? 0;
     document.getElementById('stat-today').textContent = d.todayCount ?? 0;
     document.getElementById('stat-rate').textContent = '解決率 ' + (d.resolutionRate ?? 0) + '%';
+    document.getElementById('stat-good-rate').textContent = d.goodRate !== null ? d.goodRate + '%' : '—';
+    document.getElementById('stat-rated').textContent = `👍 ${d.ratedUp ?? 0}  👎 ${d.ratedDown ?? 0}`;
     renderDailyChart(d.dailyCounts || []);
     renderTopQuestions(d.topQuestions || []);
   } catch (e) {
@@ -291,6 +299,7 @@ function renderLogs(rows, total) {
         <td class="ts">${formatTs(r.created_at)}</td>
         <td class="message" title="${escHtml(r.user_message)}">${escHtml(r.user_message)}</td>
         <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
+        <td style="font-size:16px;text-align:center">${r.rating === 1 ? '👍' : r.rating === -1 ? '👎' : '—'}</td>
         <td>
           ${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}
           ${(r.needs_human || r.ai_reply.includes('很抱歉'))
