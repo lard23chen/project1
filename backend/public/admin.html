@@ -67,6 +67,22 @@
   .page-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .empty { text-align: center; color: #475569; padding: 40px; font-size: 14px; }
+
+  /* Knowledge modal */
+  .add-kb-btn { background: #065f46; color: #6ee7b7; border: none; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .add-kb-btn:hover { background: #047857; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: center; justify-content: center; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; width: 520px; max-width: 95vw; display: flex; flex-direction: column; gap: 12px; }
+  .modal h2 { font-size: 16px; color: #f8fafc; margin: 0; }
+  .modal label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
+  .modal input, .modal textarea { width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 13px; box-sizing: border-box; }
+  .modal textarea { height: 100px; resize: vertical; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-btns button { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; }
+  .btn-cancel { background: #334155; color: #94a3b8; }
+  .btn-save { background: #2563eb; color: white; }
+  .btn-save:hover { background: #1d4ed8; }
 </style>
 </head>
 <body>
@@ -147,6 +163,29 @@
     </div>
   </div>
 </main>
+
+<!-- 新增知識庫 Modal -->
+<div class="modal-overlay hidden" id="kb-modal">
+  <div class="modal">
+    <h2>新增至知識庫</h2>
+    <div>
+      <label>問題</label>
+      <input type="text" id="kb-question" />
+    </div>
+    <div>
+      <label>標籤（逗號分隔，例如：退票,手續費）</label>
+      <input type="text" id="kb-tags" placeholder="退票, 線上退票, ..." />
+    </div>
+    <div>
+      <label>答案</label>
+      <textarea id="kb-answer" placeholder="請輸入標準答案內容..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeKbModal()">取消</button>
+      <button class="btn-save" onclick="saveKnowledge()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <script>
 let currentPage = 1;
@@ -245,7 +284,10 @@ function renderLogs(rows, total) {
         <td class="ts">${formatTs(r.created_at)}</td>
         <td class="message" title="${escHtml(r.user_message)}">${escHtml(r.user_message)}</td>
         <td class="reply" title="${escHtml(r.ai_reply)}">${escHtml(r.ai_reply)}</td>
-        <td>${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}</td>
+        <td>
+          ${r.needs_human ? '<span class="badge human">轉人工</span>' : '<span class="badge ai">AI 解決</span>'}
+          ${r.needs_human ? `<button class="add-kb-btn" onclick="openKbModal(${JSON.stringify(r.user_message)})">＋知識庫</button>` : ''}
+        </td>
       </tr>`).join('');
   }
   const start = (currentPage - 1) * 20 + 1;
@@ -276,6 +318,38 @@ function formatTs(ts) {
   const d = new Date(ts);
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* Knowledge Modal */
+function openKbModal(question) {
+  document.getElementById('kb-question').value = question || '';
+  document.getElementById('kb-tags').value = '';
+  document.getElementById('kb-answer').value = '';
+  document.getElementById('kb-modal').classList.remove('hidden');
+}
+
+function closeKbModal() {
+  document.getElementById('kb-modal').classList.add('hidden');
+}
+
+async function saveKnowledge() {
+  const question = document.getElementById('kb-question').value.trim();
+  const tags     = document.getElementById('kb-tags').value.trim();
+  const answer   = document.getElementById('kb-answer').value.trim();
+  if (!question || !answer) { alert('請填寫問題與答案'); return; }
+
+  const res = await fetch('/api/admin/knowledge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question, tags, answer })
+  });
+  const data = await res.json();
+  if (data.success) {
+    alert(`已新增至知識庫（${data.id}）`);
+    closeKbModal();
+  } else {
+    alert('儲存失敗：' + (data.error || '未知錯誤'));
+  }
 }
 
 /* Init */

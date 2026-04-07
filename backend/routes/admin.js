@@ -1,7 +1,11 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getStats, getLogs } = require('../services/db');
+
+const KNOWLEDGE_PATH = path.join(__dirname, '../knowledge/knowledge_qa.json');
 
 // 登入頁
 router.get('/admin/login', (req, res) => {
@@ -79,6 +83,27 @@ router.get('/api/admin/logs', requireAuth, async (req, res) => {
     page: parseInt(page) || 1,
     limit: parseInt(limit) || 20
   }));
+});
+
+// 新增知識庫 API
+router.post('/api/admin/knowledge', requireAuth, (req, res) => {
+  const { question, answer, tags } = req.body;
+  if (!question || !answer) return res.status(400).json({ error: '請填寫問題與答案' });
+
+  const data = JSON.parse(fs.readFileSync(KNOWLEDGE_PATH, 'utf-8'));
+  const lastId = data.reduce((max, item) => {
+    const n = parseInt((item.id || '').replace('QA-', '')) || 0;
+    return n > max ? n : max;
+  }, 0);
+  const newItem = {
+    id: `QA-${String(lastId + 1).padStart(3, '0')}`,
+    tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    question,
+    answer
+  };
+  data.push(newItem);
+  fs.writeFileSync(KNOWLEDGE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  res.json({ success: true, id: newItem.id });
 });
 
 module.exports = router;
