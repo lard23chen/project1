@@ -22,7 +22,7 @@ const Contact      = mongoose.model('Contact', contactSchema);
 async function initDb() {
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new Error('MONGODB_URI 環境變數未設定');
-  await mongoose.connect(uri);
+  await mongoose.connect(uri, { dbName: 'AlexLIFE' });
   console.log('MongoDB connected');
 }
 
