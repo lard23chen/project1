@@ -9,6 +9,30 @@
     return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
   }
 
+  const DEFAULTS = {
+    color:    '#2563eb',
+    title:    '智能客服',
+    icon:     '💬',
+    welcome:  '您好！我是智能客服，有什麼可以協助您的嗎？',
+    open:     false,
+    position: 'right',
+    lang:     'zh',
+  };
+
+  function parseConfig(dataset, defaults) {
+    const lang = dataset.lang || defaults.lang;
+    const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' };
+    return {
+      color:    dataset.color    || defaults.color,
+      title:    dataset.title    || (lang === 'en' ? enDefaults.title : defaults.title),
+      icon:     dataset.icon     || defaults.icon,
+      welcome:  dataset.welcome  || (lang === 'en' ? enDefaults.welcome : defaults.welcome),
+      open:     dataset.open === 'true',
+      position: dataset.position || defaults.position,
+      lang,
+    };
+  }
+
   const CSS = `
     :host {
       all: initial;
@@ -213,6 +237,11 @@
     }
     return '';
   })();
+
+  const cfg = parseConfig(
+    (document.currentScript || {}).dataset || {},
+    DEFAULTS
+  );
 
   class ChatWidget extends HTMLElement {
     constructor() {

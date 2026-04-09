@@ -12,6 +12,32 @@ function darkenColor(hex, amount = 20) {
   return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
+// parseConfig is duplicated from backend/public/widget.js (browser IIFE cannot be required).
+// If you update the algorithm in widget.js, update this copy too.
+function parseConfig(dataset, defaults) {
+  const lang = dataset.lang || defaults.lang;
+  const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' };
+  return {
+    color:    dataset.color    || defaults.color,
+    title:    dataset.title    || (lang === 'en' ? enDefaults.title : defaults.title),
+    icon:     dataset.icon     || defaults.icon,
+    welcome:  dataset.welcome  || (lang === 'en' ? enDefaults.welcome : defaults.welcome),
+    open:     dataset.open === 'true',
+    position: dataset.position || defaults.position,
+    lang,
+  };
+}
+
+const DEFAULTS = {
+  color: '#2563eb',
+  title: '智能客服',
+  icon: '💬',
+  welcome: '您好！我是智能客服，有什麼可以協助您的嗎？',
+  open: false,
+  position: 'right',
+  lang: 'zh',
+};
+
 describe('darkenColor', () => {
   test('將 #2563eb 調深應回傳較暗的 hex', () => {
     const result = darkenColor('#2563eb', 20);
@@ -37,5 +63,38 @@ describe('darkenColor', () => {
     // B: 0x14=20 → 20-20=0   → 0x00
     const result = darkenColor('#300014', 20);
     expect(result).toBe('#1c0000');
+  });
+});
+
+describe('parseConfig', () => {
+  test('無任何 data-* 時全部使用預設值', () => {
+    const cfg = parseConfig({}, DEFAULTS);
+    expect(cfg).toEqual(DEFAULTS);
+  });
+
+  test('data-color 覆蓋預設色', () => {
+    const cfg = parseConfig({ color: '#e91e63' }, DEFAULTS);
+    expect(cfg.color).toBe('#e91e63');
+  });
+
+  test('data-open="true" 解析為 boolean true', () => {
+    const cfg = parseConfig({ open: 'true' }, DEFAULTS);
+    expect(cfg.open).toBe(true);
+  });
+
+  test('data-open="false" 解析為 boolean false', () => {
+    const cfg = parseConfig({ open: 'false' }, DEFAULTS);
+    expect(cfg.open).toBe(false);
+  });
+
+  test('data-lang="en" 時 title/welcome 使用英文預設', () => {
+    const cfg = parseConfig({ lang: 'en' }, DEFAULTS);
+    expect(cfg.title).toBe('Support');
+    expect(cfg.lang).toBe('en');
+  });
+
+  test('data-lang="en" 但同時有 data-title 時優先用 data-title', () => {
+    const cfg = parseConfig({ lang: 'en', title: 'ibon Help' }, DEFAULTS);
+    expect(cfg.title).toBe('ibon Help');
   });
 });
