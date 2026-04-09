@@ -1,7 +1,10 @@
 // widget.js 是瀏覽器腳本，無法直接 require。
 // 把純函式提取出來放在同一個測試用 module 裡驗證邏輯正確性。
 
+// darkenColor is duplicated from backend/public/widget.js (browser IIFE cannot be required).
+// If you update the algorithm in widget.js, update this copy too.
 function darkenColor(hex, amount = 20) {
+  if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return hex || '#2563eb';
   const num = parseInt(hex.replace('#', ''), 16);
   const r = Math.max(0, (num >> 16) - amount);
   const g = Math.max(0, ((num >> 8) & 0xff) - amount);
@@ -26,5 +29,13 @@ describe('darkenColor', () => {
   test('不傳 amount 時預設調深 20', () => {
     const result = darkenColor('#2563eb');
     expect(result).toBe('#114fd7');
+  });
+
+  test('只有部分通道 clamp 時其他通道正常調深', () => {
+    // R: 0x30=48 → 48-20=28 → 0x1c
+    // G: 0x00=0  → 0-20 clamp → 0x00
+    // B: 0x14=20 → 20-20=0   → 0x00
+    const result = darkenColor('#300014', 20);
+    expect(result).toBe('#1c0000');
   });
 });

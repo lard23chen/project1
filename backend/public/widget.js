@@ -1,5 +1,7 @@
 (function () {
+  // Also duplicated in backend/tests/widget.test.js — keep both in sync.
   function darkenColor(hex, amount = 20) {
+    if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return hex || '#2563eb';
     const num = parseInt(hex.replace('#', ''), 16);
     const r = Math.max(0, (num >> 16) - amount);
     const g = Math.max(0, ((num >> 8) & 0xff) - amount);
