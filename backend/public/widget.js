@@ -21,13 +21,13 @@
 
   function parseConfig(dataset, defaults) {
     const lang = dataset.lang || defaults.lang;
-    const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' };
+    const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' }; // English locale fallbacks
     return {
       color:    dataset.color    || defaults.color,
       title:    dataset.title    || (lang === 'en' ? enDefaults.title : defaults.title),
       icon:     dataset.icon     || defaults.icon,
       welcome:  dataset.welcome  || (lang === 'en' ? enDefaults.welcome : defaults.welcome),
-      open:     dataset.open === 'true',
+      open:     dataset.open !== undefined ? dataset.open === 'true' : defaults.open,
       position: dataset.position || defaults.position,
       lang,
     };

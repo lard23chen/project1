@@ -12,22 +12,6 @@ function darkenColor(hex, amount = 20) {
   return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
-// parseConfig is duplicated from backend/public/widget.js (browser IIFE cannot be required).
-// If you update the algorithm in widget.js, update this copy too.
-function parseConfig(dataset, defaults) {
-  const lang = dataset.lang || defaults.lang;
-  const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' };
-  return {
-    color:    dataset.color    || defaults.color,
-    title:    dataset.title    || (lang === 'en' ? enDefaults.title : defaults.title),
-    icon:     dataset.icon     || defaults.icon,
-    welcome:  dataset.welcome  || (lang === 'en' ? enDefaults.welcome : defaults.welcome),
-    open:     dataset.open === 'true',
-    position: dataset.position || defaults.position,
-    lang,
-  };
-}
-
 const DEFAULTS = {
   color: '#2563eb',
   title: '智能客服',
@@ -37,6 +21,22 @@ const DEFAULTS = {
   position: 'right',
   lang: 'zh',
 };
+
+// parseConfig is duplicated from backend/public/widget.js (browser IIFE cannot be required).
+// If you update the algorithm in widget.js, update this copy too.
+function parseConfig(dataset, defaults) {
+  const lang = dataset.lang || defaults.lang;
+  const enDefaults = { title: 'Support', welcome: 'Hi! How can I help you?' }; // English locale fallbacks
+  return {
+    color:    dataset.color    || defaults.color,
+    title:    dataset.title    || (lang === 'en' ? enDefaults.title : defaults.title),
+    icon:     dataset.icon     || defaults.icon,
+    welcome:  dataset.welcome  || (lang === 'en' ? enDefaults.welcome : defaults.welcome),
+    open:     dataset.open !== undefined ? dataset.open === 'true' : defaults.open,
+    position: dataset.position || defaults.position,
+    lang,
+  };
+}
 
 describe('darkenColor', () => {
   test('將 #2563eb 調深應回傳較暗的 hex', () => {
@@ -85,6 +85,12 @@ describe('parseConfig', () => {
   test('data-open="false" 解析為 boolean false', () => {
     const cfg = parseConfig({ open: 'false' }, DEFAULTS);
     expect(cfg.open).toBe(false);
+  });
+
+  test('data-open 未設定時使用 defaults.open', () => {
+    const customDefaults = { ...DEFAULTS, open: true };
+    const cfg = parseConfig({}, customDefaults);
+    expect(cfg.open).toBe(true);
   });
 
   test('data-lang="en" 時 title/welcome 使用英文預設', () => {
