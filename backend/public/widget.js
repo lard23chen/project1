@@ -261,6 +261,9 @@
       fillAll:         '請填寫所有欄位',
       copy:            '複製',
       copied:          '已複製',
+      rateUp:          '有幫助',
+      rateDown:        '沒有幫助',
+      toggleTitle:     '客服聊天',
     },
     en: {
       send:            'Send',
@@ -279,6 +282,9 @@
       fillAll:         'Please fill in all fields.',
       copy:            'Copy',
       copied:          'Copied',
+      rateUp:          'Helpful',
+      rateDown:        'Not helpful',
+      toggleTitle:     'Chat with us',
     },
   };
 
@@ -300,7 +306,7 @@
     render() {
       this.shadow.innerHTML = `
         <style>${CSS}</style>
-        <button id="toggle-btn" title="${t.send}">${cfg.icon}</button>
+        <button id="toggle-btn" title="${t.toggleTitle}">${cfg.icon}</button>
         <div id="chat-window" class="hidden">
           <div id="chat-header">${cfg.title}</div>
           <div id="messages"></div>
@@ -375,12 +381,12 @@
 
           const upBtn = document.createElement('button');
           upBtn.className = 'rate-btn up';
-          upBtn.title = '有幫助';
+          upBtn.title = t.rateUp;
           upBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
 
           const downBtn = document.createElement('button');
           downBtn.className = 'rate-btn down';
-          downBtn.title = '沒有幫助';
+          downBtn.title = t.rateDown;
           downBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
 
           const sendRating = async (rating, activeBtn, otherBtn) => {
