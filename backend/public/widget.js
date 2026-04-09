@@ -37,15 +37,16 @@
     :host {
       all: initial;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --wc: #2563eb;
+      --wc-dark: #1d4ed8;
     }
     #toggle-btn {
       position: fixed;
       bottom: 24px;
-      right: 24px;
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       border: none;
       cursor: pointer;
@@ -56,11 +57,10 @@
       align-items: center;
       justify-content: center;
     }
-    #toggle-btn:hover { background: #1d4ed8; }
+    #toggle-btn:hover { background: var(--wc-dark); }
     #chat-window {
       position: fixed;
       bottom: 92px;
-      right: 24px;
       width: 320px;
       height: 480px;
       background: white;
@@ -73,7 +73,7 @@
     }
     #chat-window.hidden { display: none; }
     #chat-header {
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       padding: 14px 16px;
       font-weight: 600;
@@ -96,7 +96,7 @@
       word-break: break-word;
     }
     .bubble.user {
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       align-self: flex-end;
       border-bottom-right-radius: 4px;
@@ -135,7 +135,7 @@
       border-radius: 4px;
       transition: background 0.1s, color 0.1s;
     }
-    .copy-btn:hover { color: #2563eb; }
+    .copy-btn:hover { color: var(--wc); }
     .copy-btn.copied { color: #16a34a; opacity: 1; }
     .rate-btn:hover { background: #e5e7eb; }
     .rate-btn.up.active { color: #16a34a; }
@@ -155,7 +155,7 @@
     }
     .contact-hint span { font-size: 12px; color: #1e40af; flex: 1; }
     .contact-hint button {
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       border: none;
       border-radius: 6px;
@@ -164,7 +164,7 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .contact-hint button:hover { background: #1d4ed8; }
+    .contact-hint button:hover { background: var(--wc-dark); }
     #contact-form {
       padding: 12px;
       display: flex;
@@ -189,7 +189,7 @@
     }
     #contact-form textarea { height: 60px; }
     #contact-form button {
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       border: none;
       border-radius: 8px;
@@ -198,7 +198,7 @@
       font-size: 13px;
       font-weight: 600;
     }
-    #contact-form button:hover { background: #1d4ed8; }
+    #contact-form button:hover { background: var(--wc-dark); }
     #input-area {
       display: flex;
       padding: 10px;
@@ -214,9 +214,9 @@
       font-size: 14px;
       outline: none;
     }
-    #user-input:focus { border-color: #2563eb; }
+    #user-input:focus { border-color: var(--wc); }
     #send-btn {
-      background: #2563eb;
+      background: var(--wc);
       color: white;
       border: none;
       border-radius: 8px;
@@ -224,7 +224,7 @@
       cursor: pointer;
       font-size: 14px;
     }
-    #send-btn:hover { background: #1d4ed8; }
+    #send-btn:hover { background: var(--wc-dark); }
     #send-btn:disabled { background: #93c5fd; cursor: not-allowed; }
   `;
 
@@ -301,6 +301,20 @@
     connectedCallback() {
       this.render();
       this.bindEvents();
+      // Apply theme color
+      this.shadow.host.style.setProperty('--wc', cfg.color);
+      this.shadow.host.style.setProperty('--wc-dark', darkenColor(cfg.color));
+      // Apply position
+      const side = cfg.position === 'left' ? 'left' : 'right';
+      const opp  = side === 'left' ? 'right' : 'left';
+      const btn  = this.shadow.getElementById('toggle-btn');
+      const win  = this.shadow.getElementById('chat-window');
+      btn.style[side] = '24px';
+      btn.style[opp]  = '';
+      win.style[side] = '24px';
+      win.style[opp]  = '';
+      // Auto-open if configured
+      if (cfg.open) this.toggleWindow();
     }
 
     render() {
