@@ -104,3 +104,14 @@ describe('parseConfig', () => {
     expect(cfg.title).toBe('ibon Help');
   });
 });
+
+// NOTE: connectedCallback behavior (CSS variable injection, position, auto-open)
+// is not covered by unit tests because it requires a full Custom Elements + Shadow DOM
+// environment (jsdom does not support Web Components by default).
+// These behaviors are verified via manual browser testing as specified in the plan.
+// To add automated coverage, install @web/test-runner with a real browser runner.
+describe.skip('connectedCallback (browser-only, manual verification required)', () => {
+  test.todo('applies --wc CSS variable from cfg.color');
+  test.todo('sets btn.style.left when cfg.position is "left"');
+  test.todo('calls toggleWindow() when cfg.open is true');
+});
