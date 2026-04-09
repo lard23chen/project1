@@ -243,6 +243,47 @@
     DEFAULTS
   );
 
+  const I18N = {
+    zh: {
+      send:            '送出',
+      typing:          '輸入中...',
+      placeholder:     '輸入您的問題...',
+      contactPrompt:   '請留下您的聯絡資訊，客服將盡快回覆您：',
+      namePlaceholder: '姓名',
+      emailPlaceholder:'Email',
+      msgPlaceholder:  '問題描述',
+      contactSubmit:   '送出',
+      contactHint:     '需要人工客服協助嗎？',
+      contactBtn:      '聯絡客服',
+      successMsg:      '已收到您的留言！我們將盡快與您聯繫。感謝您的耐心等待。',
+      errorMsg:        '抱歉，連線發生錯誤，請稍後再試。',
+      contactError:    '送出失敗，請稍後再試或直接聯絡客服。',
+      fillAll:         '請填寫所有欄位',
+      copy:            '複製',
+      copied:          '已複製',
+    },
+    en: {
+      send:            'Send',
+      typing:          'Typing...',
+      placeholder:     'Type a message...',
+      contactPrompt:   'Please leave your contact info and we will get back to you:',
+      namePlaceholder: 'Name',
+      emailPlaceholder:'Email',
+      msgPlaceholder:  'Describe your issue',
+      contactSubmit:   'Submit',
+      contactHint:     'Need help from a human agent?',
+      contactBtn:      'Contact Support',
+      successMsg:      'Your message has been received! We will contact you shortly.',
+      errorMsg:        'Connection error. Please try again later.',
+      contactError:    'Submission failed. Please try again or contact support directly.',
+      fillAll:         'Please fill in all fields.',
+      copy:            'Copy',
+      copied:          'Copied',
+    },
+  };
+
+  const t = I18N[cfg.lang] || I18N.zh;
+
   class ChatWidget extends HTMLElement {
     constructor() {
       super();
@@ -259,20 +300,20 @@
     render() {
       this.shadow.innerHTML = `
         <style>${CSS}</style>
-        <button id="toggle-btn" title="客服聊天">💬</button>
+        <button id="toggle-btn" title="${t.send}">${cfg.icon}</button>
         <div id="chat-window" class="hidden">
-          <div id="chat-header">智能客服</div>
+          <div id="chat-header">${cfg.title}</div>
           <div id="messages"></div>
           <div id="contact-form" class="hidden">
-            <p>請留下您的聯絡資訊，客服將盡快回覆您：</p>
-            <input type="text" id="cf-name" placeholder="姓名" />
-            <input type="email" id="cf-email" placeholder="Email" />
-            <textarea id="cf-message" placeholder="問題描述"></textarea>
-            <button id="cf-submit">送出</button>
+            <p>${t.contactPrompt}</p>
+            <input type="text" id="cf-name" placeholder="${t.namePlaceholder}" />
+            <input type="email" id="cf-email" placeholder="${t.emailPlaceholder}" />
+            <textarea id="cf-message" placeholder="${t.msgPlaceholder}"></textarea>
+            <button id="cf-submit">${t.contactSubmit}</button>
           </div>
           <div id="input-area">
-            <input type="text" id="user-input" placeholder="輸入您的問題..." maxlength="500" />
-            <button id="send-btn">送出</button>
+            <input type="text" id="user-input" placeholder="${t.placeholder}" maxlength="500" />
+            <button id="send-btn">${t.send}</button>
           </div>
         </div>
       `;
@@ -293,7 +334,7 @@
       const win = this.shadow.getElementById('chat-window');
       win.classList.toggle('hidden', !this.open);
       if (this.open && this.history.length === 0) {
-        this.addMessage('assistant', '您好！我是智能客服，有什麼可以協助您的嗎？');
+        this.addMessage('assistant', cfg.welcome);
       }
     }
 
@@ -312,14 +353,14 @@
         // 複製按鈕
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
-        copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 複製`;
+        copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ${t.copy}`;
         copyBtn.addEventListener('click', () => {
           navigator.clipboard.writeText(text).then(() => {
             copyBtn.classList.add('copied');
-            copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 已複製`;
+            copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${t.copied}`;
             setTimeout(() => {
               copyBtn.classList.remove('copied');
-              copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 複製`;
+              copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ${t.copy}`;
             }, 2000);
           });
         });
@@ -378,7 +419,7 @@
       const messages = this.shadow.getElementById('messages');
       const el = document.createElement('div');
       el.className = 'bubble assistant typing';
-      el.textContent = '輸入中...';
+      el.textContent = t.typing;
       el.id = 'typing-indicator';
       messages.appendChild(el);
       messages.scrollTop = messages.scrollHeight;
@@ -418,7 +459,7 @@
         }
       } catch {
         this.removeTyping();
-        this.addMessage('assistant', '抱歉，連線發生錯誤，請稍後再試。');
+        this.addMessage('assistant', t.errorMsg);
       } finally {
         sendBtn.disabled = false;
         input.focus();
@@ -431,7 +472,7 @@
       if (this.shadow.querySelector('.contact-hint')) return;
       const hint = document.createElement('div');
       hint.className = 'contact-hint';
-      hint.innerHTML = `<span>需要人工客服協助嗎？</span><button id="open-contact-btn">聯絡客服</button>`;
+      hint.innerHTML = `<span>${t.contactHint}</span><button id="open-contact-btn">${t.contactBtn}</button>`;
       hint.querySelector('#open-contact-btn').addEventListener('click', () => {
         hint.remove();
         this.showContactForm();
@@ -451,7 +492,7 @@
       const message = this.shadow.getElementById('cf-message').value.trim();
 
       if (!name || !email || !message) {
-        alert('請填寫所有欄位');
+        alert(t.fillAll);
         return;
       }
 
@@ -462,9 +503,9 @@
           body: JSON.stringify({ name, email, message, chatHistory: this.history })
         });
         this.shadow.getElementById('contact-form').classList.add('hidden');
-        this.addMessage('assistant', '已收到您的留言！我們將盡快與您聯繫。感謝您的耐心等待。');
+        this.addMessage('assistant', t.successMsg);
       } catch {
-        this.addMessage('assistant', '送出失敗，請稍後再試或直接聯絡客服。');
+        this.addMessage('assistant', t.contactError);
       }
     }
   }
